@@ -1,0 +1,7 @@
+# Dependency directories
+coverage
+node_modules
+**/node_modules/
+.vscode
+.env
+package-lock.json
