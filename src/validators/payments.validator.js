@@ -5,21 +5,29 @@ function sendValidationError(res, message) {
 }
 
 exports.validateProcessPayment = function validateProcessPayment(req, res, next) {
-    const { orderId, method } = req.body;
+    const { orderId, transactionId, method } = req.body;
 
-    if (!orderId || typeof orderId !== 'string' || orderId.trim() === '') {
-        return sendValidationError(res, 'orderId is required');
+    const hasOrderId = typeof orderId === 'string' && orderId.trim() !== '';
+    const hasTransactionId = typeof transactionId === 'string' && transactionId.trim() !== '';
+
+    if (!hasOrderId && !hasTransactionId) {
+        return sendValidationError(res, 'orderId or transactionId is required');
     }
 
-    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+    if (hasOrderId && !mongoose.Types.ObjectId.isValid(orderId)) {
         return sendValidationError(res, 'orderId must be a valid MongoDB ObjectId');
+    }
+
+    if (hasTransactionId && !mongoose.Types.ObjectId.isValid(transactionId)) {
+        return sendValidationError(res, 'transactionId must be a valid MongoDB ObjectId');
     }
 
     if (!method || typeof method !== 'string' || method.trim() === '') {
         return sendValidationError(res, 'method is required');
     }
 
-    req.body.orderId = orderId.trim();
+    if (hasOrderId) req.body.orderId = orderId.trim();
+    if (hasTransactionId) req.body.transactionId = transactionId.trim();
     req.body.method = method.trim();
 
     return next();

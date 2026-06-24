@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { validateEnv } = require('../config/env');
 
 exports.verifyToken = function verifyToken(req, res, next) {
     try {
@@ -8,7 +9,8 @@ exports.verifyToken = function verifyToken(req, res, next) {
         }
 
         const token = auth.split(' ')[1];
-        const payload = jwt.verify(token, process.env.JWT_SECRET);
+        const { jwtSecret } = validateEnv({ requireJwt: true });
+        const payload = jwt.verify(token, jwtSecret);
         req.user = payload;
         return next();
     } catch (error) {

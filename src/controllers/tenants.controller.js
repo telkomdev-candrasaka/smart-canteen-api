@@ -1,5 +1,6 @@
 const tenantModel = require('../models/tenant.model');
-const Redis = require('ioredis');
+const { createRedisClient, closeRedisClient } = require('../config/redis');
+const { canAccessTenant, sendForbidden } = require('../policies/tenant.policy');
 
 exports.createTenant = async function createTenant(req, res, next) {
     try {
@@ -48,6 +49,7 @@ exports.getMenu = async function getMenu(req, res, next) {
 exports.streamTenantOrders = async function streamTenantOrders(req, res, next) {
     try {
         const { id } = req.params;
+        if (!canAccessTenant(req.user, id)) return sendForbidden(res);
 
         // setup SSE
         res.setHeader('Content-Type', 'text/event-stream');
@@ -55,13 +57,13 @@ exports.streamTenantOrders = async function streamTenantOrders(req, res, next) {
         res.setHeader('Connection', 'keep-alive');
         res.flushHeaders && res.flushHeaders();
 
-        const subscriber = new Redis(process.env.REDIS_URL);
+        const subscriber = createRedisClient('tenant-order-stream');
         const channel = `tenant:${id}:orders`;
 
         const onMessage = (channelName, message) => {
             try {
                 res.write(`data: ${message}\n\n`);
-            } catch (err) {
+            } catch {
                 // ignore write errors
             }
         };
@@ -73,10 +75,10 @@ exports.streamTenantOrders = async function streamTenantOrders(req, res, next) {
             subscriber.removeListener('message', onMessage);
             try {
                 await subscriber.unsubscribe(channel);
-            } catch (err) {
+            } catch {
                 // ignore
             }
-            subscriber.quit();
+            await closeRedisClient(subscriber);
         });
     } catch (error) {
         return next(error);

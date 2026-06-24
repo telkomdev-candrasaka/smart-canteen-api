@@ -54,9 +54,20 @@ exports.validateCreateTenant = function validateCreateTenant(req, res, next) {
 
             if (mi.quantity !== undefined) {
                 const q = Number(mi.quantity);
-                if (!Number.isInteger(q) || q < 1) {
-                    return sendValidationError(res, 'Menu item quantity must be an integer >= 1 when provided');
+                if (!Number.isInteger(q) || q < 0) {
+                    return sendValidationError(res, 'Menu item quantity must be an integer >= 0 when provided');
                 }
+            }
+
+            if (mi.stock !== undefined) {
+                const stock = Number(mi.stock);
+                if (!Number.isInteger(stock) || stock < 0) {
+                    return sendValidationError(res, 'Menu item stock must be an integer >= 0 when provided');
+                }
+            }
+
+            if (mi.reserved !== undefined || mi.sold !== undefined) {
+                return sendValidationError(res, 'Menu item reserved and sold counters are managed by the system');
             }
         }
     }
@@ -71,6 +82,9 @@ exports.validateCreateTenant = function validateCreateTenant(req, res, next) {
                   description: typeof mi.description === 'string' ? mi.description.trim() : '',
                   price: Number(mi.price),
                   available: mi.available === undefined ? true : Boolean(mi.available),
+                  stock: Number(mi.stock ?? mi.quantity ?? 0),
+                  reserved: 0,
+                  sold: 0,
               }))
             : [],
     };
