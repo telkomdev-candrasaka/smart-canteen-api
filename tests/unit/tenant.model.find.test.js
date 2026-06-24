@@ -25,6 +25,9 @@ test('findAll and findById work', async () => {
 
   const found = await tenantModel.findById(a._id);
   expect(found.name).toBe('FindAll1');
+
+  const foundB = await tenantModel.findById(b._id);
+  expect(foundB.name).toBe('FindAll2');
 });
 
 test('findById supports session-aware reads', async () => {
