@@ -1,9 +1,10 @@
 module.exports = {
     collectCoverage: true,
-    coveragePathIgnorePatterns: ['/node_modules/', '/_mocks/', '/_tests/', '/src/seed.js'],
+    coveragePathIgnorePatterns: ['/node_modules/', '/_mocks/', '/tests/', '/src/seed.js'],
     collectCoverageFrom: ['src/**/*.js'],
     coverageDirectory: 'coverage',
     coverageReporters: ['lcov', 'text'],
+    testMatch: ['**/tests/**/*.test.js'],
     coverageThreshold: {
         global: {
             branches: 95,

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { isValidOrderState } = require('../domain/order-state-machine');
 
 function sendValidationError(res, message) {
     return res.status(400).json({ success: false, message });
@@ -61,6 +62,24 @@ exports.validateCreateOrder = function validateCreateOrder(req, res, next) {
     }
 
     req.body = { tenantId: tenantId.trim(), items: normalized };
+
+    return next();
+};
+
+exports.validateUpdateOrderStatus = function validateUpdateOrderStatus(req, res, next) {
+    const { status } = req.body;
+
+    if (typeof status !== 'string' || status.trim() === '') {
+        return sendValidationError(res, 'status is required and must be a non-empty string');
+    }
+
+    const normalizedStatus = status.trim();
+
+    if (!isValidOrderState(normalizedStatus)) {
+        return sendValidationError(res, 'status must be a valid order state');
+    }
+
+    req.body = { status: normalizedStatus };
 
     return next();
 };

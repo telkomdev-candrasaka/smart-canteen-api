@@ -1,15 +1,20 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const userModel = require('../models/user.model');
+const { validateEnv } = require('../config/env');
+
+const PUBLIC_ROLE = 'MEMBER';
 
 function signToken(user) {
     const payload = { id: user._id, email: user.email, role: user.role, tenantId: user.tenantId };
-    return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const { jwtSecret } = validateEnv({ requireJwt: true });
+
+    return jwt.sign(payload, jwtSecret, { expiresIn: '7d' });
 }
 
 exports.register = async function register(req, res, next) {
     try {
-        const { email, password, role = 'MEMBER', tenantId } = req.body;
+        const { email, password, tenantId } = req.body;
 
         const existing = await userModel.findByEmail(email);
         if (existing) {
@@ -17,7 +22,7 @@ exports.register = async function register(req, res, next) {
         }
 
         const hashed = await bcrypt.hash(password, 10);
-        const user = await userModel.create({ email, password: hashed, role, tenantId });
+        const user = await userModel.create({ email, password: hashed, role: PUBLIC_ROLE, tenantId });
 
         const token = signToken(user);
 

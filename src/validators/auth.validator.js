@@ -2,8 +2,12 @@ function sendValidationError(res, message) {
     return res.status(400).json({ success: false, message });
 }
 
+function sendForbiddenRoleError(res) {
+    return res.status(403).json({ success: false, message: 'Privileged roles cannot be assigned through public registration' });
+}
+
 exports.validateRegister = function validateRegister(req, res, next) {
-    const { email, password, role, tenantId } = req.body;
+    const { email, password, role } = req.body;
 
     if (!email || typeof email !== 'string' || email.trim() === '') {
         return sendValidationError(res, 'Email is required');
@@ -14,9 +18,14 @@ exports.validateRegister = function validateRegister(req, res, next) {
     }
 
     if (role !== undefined) {
-        const allowed = ['SUPER_ADMIN', 'TENANT_ADMIN', 'MEMBER'];
-        if (!allowed.includes(role)) return sendValidationError(res, `Role must be one of ${allowed.join(', ')}`);
-        if (role === 'TENANT_ADMIN' && !tenantId) return sendValidationError(res, 'tenantId is required for TENANT_ADMIN');
+        const knownRoles = ['SUPER_ADMIN', 'TENANT_ADMIN', 'MEMBER', 'ADMIN', 'OWNER'];
+        if (knownRoles.includes(role) && role !== 'MEMBER') {
+            return sendForbiddenRoleError(res);
+        }
+
+        if (role !== 'MEMBER') {
+            return sendValidationError(res, 'Role must be MEMBER when provided');
+        }
     }
 
     req.body.email = req.body.email.trim().toLowerCase();

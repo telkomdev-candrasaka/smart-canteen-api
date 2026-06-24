@@ -1,7 +1,23 @@
 # Dependency directories
-coverage
 node_modules
 **/node_modules/
-.vscode
+
+# Build and coverage artifacts
+coverage
+dist
+build
+
+# Runtime files
+logs
+*.log
+
+# Environment files
 .env
-package-lock.json
+.env.*
+!.env.example
+
+# Editor files
+.vscode
+
+# Docker / OS noise
+.DS_Store
